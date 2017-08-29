@@ -275,13 +275,13 @@ func run(c *cli.Context) error {
 	}
 
 	var api *restapi.RESTAPI
+	var tlsCfg *tls.Config
 	if len(cfg.SSLCertFile) != 0 || len(cfg.SSLKeyFile) != 0 {
-		tlsCfg, err := newTLSConfig(cfg.SSLCertFile, cfg.SSLKeyFile)
+		tlsCfg, err = newTLSConfig(cfg.SSLCertFile, cfg.SSLKeyFile)
 		checkErr("creating TLS config: ", err)
-		api, err = restapi.NewTLSRESTAPI(cfg.APIAddr, tlsCfg)
-	} else {
-		api, err = restapi.NewRESTAPI(cfg.APIAddr)
 	}
+	apiConfig := &restapi.Config{TLS: tlsCfg, BasicAuthCreds: cfg.BasicAuthCredentials}
+	api, err = restapi.NewRESTAPIWithConfig(cfg.APIAddr, apiConfig)
 	checkErr("creating REST API component", err)
 
 	proxy, err := ipfshttp.NewConnector(
